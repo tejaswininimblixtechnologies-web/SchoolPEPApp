@@ -1,4 +1,5 @@
 package com.nimblix.SchoolPEPProject.Controller;
+import com.nimblix.SchoolPEPProject.Service.TeacherPerformanceService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimblix.SchoolPEPProject.Constants.SchoolConstants;
@@ -23,6 +24,7 @@ import java.util.Map;
 public class TeacherController {
 
     private final TeacherService teacherService;
+    private final TeacherPerformanceService teacherPerformanceService;
 
     @PostMapping("/teacherRegister")
     public Map<String, String> registerTeacher(@RequestBody TeacherRegistrationRequest request) {
@@ -172,5 +174,17 @@ public class TeacherController {
                 teacherService.deleteAssignment(assignmentId, subjectId)
         );
     }
+    @GetMapping("/students/{studentId}/performance/summary")
+    public ResponseEntity<?> summary(
+            @PathVariable Long studentId,
+            @RequestParam Long schoolId,
+            @RequestParam Long classId) {
+
+        return ResponseEntity.ok(
+                teacherPerformanceService.getSummary(
+                        studentId, schoolId, classId)
+        );
+    }
+
 
 }
