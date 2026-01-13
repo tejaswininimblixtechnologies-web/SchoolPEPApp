@@ -61,12 +61,11 @@ public class AuthController {
                         .body(Map.of(SchoolConstants.MESSAGE, SchoolConstants.ROLE_MISMATCH));
             }
 
-            // 5️⃣ Password check ONLY for STUDENT
-            if (SchoolConstants.STUDENT.equals(dbRole)) {
+            // 5️⃣ Password check for STUDENT & TEACHER
 
                 if (request.getPassword() == null || request.getPassword().isBlank()) {
                     return ResponseEntity.badRequest()
-                            .body(Map.of(SchoolConstants.MESSAGE, "Password is required for student login"));
+                            .body(Map.of(SchoolConstants.MESSAGE, "Password is required"));
                 }
 
                 authenticationManager.authenticate(
@@ -75,7 +74,6 @@ public class AuthController {
                                 request.getPassword()
                         )
                 );
-            }
 
             // 6️⃣ Generate JWT
             UserDetails userDetails =
