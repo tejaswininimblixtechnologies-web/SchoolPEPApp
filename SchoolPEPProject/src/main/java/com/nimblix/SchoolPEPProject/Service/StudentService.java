@@ -19,5 +19,6 @@ public interface StudentService {
 
     List<StudentDetailsResponse> getStudentsBySchoolId(Long schoolId);
 
+    List<StudentDetailsResponse> getStudentsBySchoolClassAndSection(Long schoolId, Long classId, String section);
 //    void updateStudentDetails(Integer studentId, StudentRegistrationRequest request);
 }

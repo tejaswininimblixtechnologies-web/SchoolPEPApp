@@ -19,4 +19,5 @@ public class StudentDetailsResponse {
     private Long classId;
     private String section;
     private String roleName;
+    private String rollNo;
 }

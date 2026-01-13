@@ -146,6 +146,18 @@ public class StudentController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
         }
+
+        @GetMapping("/list")
+        public ResponseEntity<Map<String, Object>> getStudentList(@RequestParam Long schoolId, @RequestParam Long classId, @RequestParam String section)
+        {
+            List<StudentDetailsResponse> students=
+                    studentService.getStudentsBySchoolClassAndSection(schoolId, classId, section);
+            Map<String, Object> response = new HashMap<>();
+            response.put(SchoolConstants.STATUS, SchoolConstants.STATUS_SUCCESS);
+            response.put("data", students);
+
+            return ResponseEntity.ok(response);
+        }
     }
 
 

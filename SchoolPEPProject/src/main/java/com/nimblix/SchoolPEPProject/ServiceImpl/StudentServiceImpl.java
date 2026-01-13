@@ -133,4 +133,25 @@ public class StudentServiceImpl implements StudentService {
         student.setStatus(SchoolConstants.IN_ACTIVE);
         studentRepository.save(student);
     }
+
+    @Override
+    public List<StudentDetailsResponse> getStudentsBySchoolClassAndSection(Long schoolId, Long classId,String section) {
+        if (schoolId == null || schoolId <= 0) {
+            throw new IllegalArgumentException("School ID must be valid");
+        }
+        List<Student> students=studentRepository.findByAllFilters(schoolId, classId, section, SchoolConstants.ACTIVE);
+
+        return students.stream()
+                .map(student -> StudentDetailsResponse.builder()
+                        .id(student.getId())
+                        .firstName(student.getFirstName())
+                        .lastName(student.getLastName())
+                        .classId(student.getClassId())
+                        .section(student.getSection())
+                        .rollNo(String.valueOf(student.getRollNo()))
+                        .status(student.getStatus())
+                        .build()
+                )
+                .toList();
+    }
 }
