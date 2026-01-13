@@ -8,6 +8,7 @@ import com.nimblix.SchoolPEPProject.Request.SubscriptionRequest;
 import com.nimblix.SchoolPEPProject.Response.SchoolListResponse;
 import com.nimblix.SchoolPEPProject.Service.SchoolService;
 import com.nimblix.SchoolPEPProject.Util.SchoolUtil;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,24 +18,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@RequestMapping("/school")
+@RequestMapping("/api/v1/school")
 @RestController
 @RequiredArgsConstructor
 public class SchoolController {
     private final SchoolService schoolService;
 
-    @PostMapping("/register")
+    @PostMapping("/signup")
     public ResponseEntity<Map<String, Object>> registerSchool(
-            @RequestBody SchoolRegistrationRequest request) {
+            @Valid @RequestBody SchoolRegistrationRequest request) {
 
         School school = schoolService.registerSchool(request);
 
         Map<String, Object> response = new HashMap<>();
-        response.put(SchoolConstants.STATUS, SchoolConstants.STATUS_SUCCESS);
-        response.put(SchoolConstants.MESSAGE, "School registered successfully");
-        response.put("data", school.getSchoolId());
+        response.put("status", 201);
+        response.put("message", "School registered successfully");
+        response.put("schoolId", school.getSchoolId());
 
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
     }
 
 
@@ -109,8 +111,4 @@ public class SchoolController {
                 "trialEndDate", school.getTrialEndDate()
         ));
     }
-
-
-
-
 }
