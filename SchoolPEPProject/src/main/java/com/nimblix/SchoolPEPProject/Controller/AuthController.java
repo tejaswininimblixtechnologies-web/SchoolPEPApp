@@ -3,17 +3,22 @@ package com.nimblix.SchoolPEPProject.Controller;
 import com.nimblix.SchoolPEPProject.Constants.SchoolConstants;
 import com.nimblix.SchoolPEPProject.Model.User;
 import com.nimblix.SchoolPEPProject.Repository.UserRepository;
-import com.nimblix.SchoolPEPProject.Request.AuthLoginRequest;
-import com.nimblix.SchoolPEPProject.Response.AuthLoginResponse;
+import com.nimblix.SchoolPEPProject.Request.AuthStudentRequest;
+import com.nimblix.SchoolPEPProject.Response.AuthStudentResponse;
 import com.nimblix.SchoolPEPProject.Security.JwtUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.*;
-import org.springframework.security.authentication.*;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import java.util.Map;
 
+import java.util.Collections;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -24,51 +29,43 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
     private final UserRepository userRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
+    @GetMapping("/encode")
+    public String encode() {
+        return passwordEncoder.encode("password123");
+    }
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthLoginRequest request) {
+    public ResponseEntity<?> login(@RequestBody AuthStudentRequest request) {
 
         try {
-            // 1️⃣ Validate email
-            if (request.getEmail() == null || request.getEmail().isBlank()) {
+            if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
                 return ResponseEntity.badRequest()
-                        .body(Map.of(SchoolConstants.MESSAGE, "Email is required"));
+                        .body(Collections.singletonMap(SchoolConstants.MESSAGE, "Email is required."));
             }
 
-            // 2️⃣ Validate role
-            if (request.getRole() == null || request.getRole().isBlank()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of(SchoolConstants.MESSAGE, "Role is required"));
-            }
-
-            // 3️⃣ Fetch user
+            // Fetch from DB
             User user = userRepository
                     .findByEmailId(request.getEmail())
-                    .filter(u -> SchoolConstants.ACTIVE.equalsIgnoreCase(u.getStatus()))
+                    .filter(u -> u.getStatus().equalsIgnoreCase(SchoolConstants.STATUS_ACTIVE))
                     .orElse(null);
 
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of(SchoolConstants.MESSAGE, "User not found or inactive"));
+                        .body(Collections.singletonMap("message", "User not found or inactive."));
             }
 
-            String dbRole = user.getRole().getRoleName().toUpperCase();
-            String requestRole = request.getRole().toUpperCase();
+            String role = user.getRole().getRoleName().toUpperCase();
 
-            // 4️⃣ Role validation
-            if (!dbRole.equals(requestRole)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of(SchoolConstants.MESSAGE, SchoolConstants.ROLE_MISMATCH));
-            }
+            if (role.equals(SchoolConstants.STUDENT)) {
 
-            // 5️⃣ Password check ONLY for STUDENT
-            if (SchoolConstants.STUDENT.equals(dbRole)) {
-
-                if (request.getPassword() == null || request.getPassword().isBlank()) {
+                if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
                     return ResponseEntity.badRequest()
-                            .body(Map.of(SchoolConstants.MESSAGE, "Password is required for student login"));
+                            .body(Collections.singletonMap("message", "Password is required for Student login."));
                 }
 
+                // Authenticate
                 authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(
                                 request.getEmail(),
@@ -77,35 +74,113 @@ public class AuthController {
                 );
             }
 
-            // 6️⃣ Generate JWT
-            UserDetails userDetails =
-                    userDetailsService.loadUserByUsername(request.getEmail());
+            else {
+                // No password check — allow login by email only
+                System.out.println(role + " logged in using email only");
+            }
 
+            // Generate JWT token
+            var userDetails = userDetailsService.loadUserByUsername(request.getEmail());
             String token = jwtUtil.generateToken(userDetails);
 
-            // 7️⃣ Update login flag
+            // Update login status
             user.setIsLogin(true);
             userRepository.save(user);
 
-            // 8️⃣ Build response
-            AuthLoginResponse response = new AuthLoginResponse();
-            response.setUserId(user.getId());
-            response.setFirstName(user.getFirstName());
-            response.setLastName(user.getLastName());
-            response.setEmail(user.getEmailId());
-            response.setRole(dbRole);
-            response.setToken(token);
+            // Build response
+            AuthStudentResponse resp = new AuthStudentResponse();
+            resp.setUserId(user.getId());
+            resp.setFirstName(user.getFirstName());
+            resp.setLastName(user.getLastName());
+            resp.setEmail(user.getEmailId());
+            resp.setRole(role);
+            resp.setToken(token);
 
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(resp);
 
         } catch (BadCredentialsException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of(SchoolConstants.MESSAGE, "Invalid password"));
+                    .body(Collections.singletonMap("message", "Incorrect password."));
         } catch (Exception ex) {
             ex.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of(SchoolConstants.MESSAGE, SchoolConstants.LOGIN_FAILED));
+                    .body(Collections.singletonMap("message", "Login failed."));
         }
     }
 
+    @PostMapping("/teacher/login")
+    public ResponseEntity<?> teacherLogin(@RequestBody AuthStudentRequest request) {
+        try{
+            if(request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of(
+                                SchoolConstants.STATUS, SchoolConstants.STATUS_FAILURE,
+                                SchoolConstants.MESSAGE, "Email is required"
+                        ));
+            }
+            if(request.getPassword() == null || request.getPassword().trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of(
+                                SchoolConstants.STATUS, SchoolConstants.STATUS_FAILURE,
+                                SchoolConstants.MESSAGE, "Password is required"
+                        ));
+            }
+
+            User user=userRepository.findByEmailId(request.getEmail())
+                    .filter(u -> SchoolConstants.STATUS_ACTIVE.equalsIgnoreCase(u.getStatus()))
+                    .orElse(null);
+
+            if(user == null){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of(
+                                SchoolConstants.STATUS, SchoolConstants.STATUS_FAILURE,
+                                SchoolConstants.MESSAGE, "Teacher not found or inactive"
+                        ));
+            }
+
+            if(!SchoolConstants.TEACHER_ROLE.equalsIgnoreCase(user.getRole().getRoleName())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of(
+                                SchoolConstants.STATUS, SchoolConstants.STATUS_FAILURE,
+                                SchoolConstants.MESSAGE, "Not a teacher account"
+                        ));
+            }
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+
+            var userDetails=userDetailsService.loadUserByUsername(request.getEmail());
+            String token=jwtUtil.generateToken(userDetails);
+
+            AuthStudentResponse data=new AuthStudentResponse();
+            data.setUserId(user.getId());
+            data.setFirstName(user.getFirstName());
+            data.setLastName(user.getLastName());
+            data.setEmail(user.getEmailId());
+            data.setRole(user.getRole().getRoleName());
+            data.setToken(token);
+
+            return ResponseEntity.ok(Map.of(
+                    SchoolConstants.STATUS, SchoolConstants.STATUS_SUCCESS,
+                    SchoolConstants.MESSAGE, "Login successful",
+                    SchoolConstants.DATA, data
+            ));
+        } catch(BadCredentialsException ex){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of(
+                            SchoolConstants.STATUS, SchoolConstants.STATUS_FAILURE,
+                            SchoolConstants.MESSAGE, "Invalid password"
+                    ));
+        } catch(Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                            SchoolConstants.STATUS, SchoolConstants.STATUS_FAILURE,
+                            SchoolConstants.MESSAGE, "Teacher login failed"
+                    ));
+        }
+    }
 }
