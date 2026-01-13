@@ -15,6 +15,7 @@ import lombok.*;
 public class School {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "school_id")
     private Long schoolId;
 
@@ -24,10 +25,10 @@ public class School {
     @Column(name = "school_address")
     private String schoolAddress;
 
-    @Column(name = "school_phone")
+    @Column(name = "school_phone", nullable = false, unique = true)
     private String schoolPhone;
 
-    @Column(name = "school_email")
+    @Column(name = "school_email", nullable = false, unique = true)
     private String schoolEmail;
 
     @Column(name = "latitude")

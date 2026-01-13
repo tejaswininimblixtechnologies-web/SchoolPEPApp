@@ -12,6 +12,9 @@ public interface SchoolRepository extends JpaRepository<School,Long> {
 
     boolean existsBySchoolEmail(String schoolEmail);
 
+    // Optional
+    // boolean existsBySchoolPhone(String schoolPhone);
+
     @Query("""
     SELECT new com.nimblix.SchoolPEPProject.Response.SchoolListResponse(
         s.id,

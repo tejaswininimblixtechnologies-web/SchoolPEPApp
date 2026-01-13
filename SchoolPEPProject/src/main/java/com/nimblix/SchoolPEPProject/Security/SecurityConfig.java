@@ -1,5 +1,6 @@
 package com.nimblix.SchoolPEPProject.Security;
 
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -44,9 +45,10 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/auth/**",
-                                "/school/**",
-                                "/teacher/**"
+                                "/api/v1/school/signup",
+                                "/api/v1/school/verifyOtp",
+                                "/api/v1/school/resendOtp",
+                                "/auth/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
@@ -54,4 +56,6 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 }
+

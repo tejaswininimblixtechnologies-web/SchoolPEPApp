@@ -20,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -36,39 +38,38 @@ public class SchoolServiceImpl implements SchoolService {
     private final UserRepository userRepository;
     private  final SchoolEmailOtpRepository schoolEmailOtpRepository;
     private final SchoolSubscriptionRepository schoolSubscriptionRepository;
+    private final PasswordEncoder passwordEncoder;
+
     @Override
     public School registerSchool(SchoolRegistrationRequest request) {
 
-        if (request.getSchoolId() == null) {
-            throw new IllegalArgumentException("School ID is mandatory");
-        }
-
-        if (schoolRepository.existsById(request.getSchoolId())) {
-            throw new RuntimeException("School ID already exists");
-        }
-
-        if (!request.getSchoolAddress().matches(".*\\b\\d{6}\\b.*")) {
-            throw new IllegalArgumentException(
-                    "School address must contain a valid 6-digit pincode"
+        // Password confirmation check
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new RuntimeException(
+                    "Password and Confirm Password do not match"
             );
         }
 
+        // Duplicate email check
         if (schoolRepository.existsBySchoolEmail(request.getSchoolEmail())) {
-            throw new RuntimeException("School already registered with this email");
+            throw new RuntimeException(
+                    "School already registered with this email"
+            );
         }
 
+        // Location type
         String locationType = "MANUAL";
         if (request.getLatitude() != null && request.getLongitude() != null) {
             locationType = "GPS";
         }
 
+        // Build entity
         School school = School.builder()
-                .schoolId(request.getSchoolId())
                 .schoolName(request.getSchoolName())
                 .schoolAddress(request.getSchoolAddress())
                 .schoolPhone(request.getSchoolPhone())
-                .password(request.getPassword()) // hash later
                 .schoolEmail(request.getSchoolEmail())
+                .password(passwordEncoder.encode(request.getPassword())) // 🔐 encrypted
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
                 .locationType(locationType)
@@ -78,15 +79,13 @@ public class SchoolServiceImpl implements SchoolService {
 
         schoolRepository.save(school);
 
-        // 🔹 Generate OTP
+        // OTP generation (bonus)
         Integer otp = MailHelper.getSixDigitRandomNumber();
 
         SchoolEmailOtp emailOtp = new SchoolEmailOtp();
         emailOtp.setEmail(request.getSchoolEmail());
         emailOtp.setOtp(String.valueOf(otp));
         emailOtp.setVerified(Boolean.FALSE);
-
-       // Set expiry time as String in IST format
         emailOtp.setExpiryTime(SchoolUtil.getExpiryTimeInISTString(5));
 
 
@@ -96,7 +95,7 @@ public class SchoolServiceImpl implements SchoolService {
                 request.getSchoolEmail(),
                 request.getSchoolName(),
                 String.valueOf(otp),
-                "School Registration OTP Verification" // ✅
+                "School Registration OTP Verification"
         );
 
 
