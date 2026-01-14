@@ -27,11 +27,114 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ArrayList;
 
 @RequiredArgsConstructor
 @Service
 @Slf4j
 public class TeacherServiceImpl implements TeacherService {
+    // 1️⃣ Get Student Performance Summary (Top Section)
+    @Override
+    public Map<String, Object> getStudentPerformanceSummary(Long studentId, Long schoolId, Long classId) {
+        Map<String, Object> result = new HashMap<>();
+        // Academic Score: average of marks across subjects
+        List<Subjects> subjects = subjectRepository.findAll();
+        double totalMarks = 0, obtainedMarks = 0;
+        int subjectCount = 0;
+        for (Subjects s : subjects) {
+            if (s.getClassRoomId() != null && s.getClassRoomId().equals(classId)) {
+                subjectCount++;
+                if (s.getTotalMarks() != null) totalMarks += s.getTotalMarks();
+                if (s.getMarksObtained() != null) obtainedMarks += s.getMarksObtained();
+            }
+        }
+        double academicScore = (totalMarks > 0) ? (obtainedMarks / totalMarks) * 100 : 0;
+        result.put("academicScore", academicScore);
+
+        // Attendance %
+        // Simulate attendance records (should use AttendanceRepository)
+        int presentDays = 20, totalDays = 22; // Replace with actual query
+        double attendancePercentage = (totalDays > 0) ? (presentDays * 100.0 / totalDays) : 0;
+        result.put("attendancePercentage", attendancePercentage);
+
+        // Assignment Completion %
+        // Simulate assignments (should use AssignmentsRepository)
+        int submitted = 10, totalAssignments = 12; // Replace with actual query
+        double assignmentCompletion = (totalAssignments > 0) ? (submitted * 100.0 / totalAssignments) : 0;
+        result.put("assignmentCompletion", assignmentCompletion);
+
+        return result;
+    }
+
+    // 2️⃣ Academic Performance – Subject-wise Graph
+    @Override
+    public Map<String, Object> getAcademicPerformanceGraph(Long studentId) {
+        Map<String, Object> result = new HashMap<>();
+        List<Map<String, Object>> subjectsList = new ArrayList<>();
+        List<Subjects> subjects = subjectRepository.findAll();
+        for (Subjects s : subjects) {
+            Map<String, Object> subj = new HashMap<>();
+            subj.put("subjectName", s.getSubjectName());
+            double avgScore = (s.getTotalMarks() != null && s.getMarksObtained() != null && s.getTotalMarks() > 0)
+                ? (s.getMarksObtained() * 100.0 / s.getTotalMarks()) : 0;
+            subj.put("averageScore", avgScore);
+            subjectsList.add(subj);
+        }
+        result.put("subjects", subjectsList);
+        return result;
+    }
+
+    // 3️⃣ Attendance Performance – Weekly Graph
+    @Override
+    public Map<String, Object> getAttendancePerformanceGraph(Long studentId, String week, String month) {
+        Map<String, Object> result = new HashMap<>();
+        List<Map<String, Object>> attendanceList = new ArrayList<>();
+        // Simulate attendance records (should use AttendanceRepository)
+        String[] days = {"Mon", "Tue", "Wed", "Thu", "Fri"};
+        boolean[] present = {true, true, false, true, false};
+        for (int i = 0; i < days.length; i++) {
+            Map<String, Object> day = new HashMap<>();
+            day.put("day", days[i]);
+            day.put("present", present[i]);
+            attendanceList.add(day);
+        }
+        result.put("week", week != null ? week : "2024-W52");
+        result.put("attendance", attendanceList);
+        return result;
+    }
+
+    // 4️⃣ Assignment Completion Analysis
+    @Override
+    public Map<String, Object> getAssignmentCompletionAnalysis(Long studentId) {
+        Map<String, Object> result = new HashMap<>();
+        List<Map<String, Object>> assignmentsList = new ArrayList<>();
+        // Simulate assignments (should use AssignmentsRepository)
+        String[] subjects = {"Maths", "English"};
+        boolean[] submitted = {true, false};
+        boolean[] pending = {false, true};
+        boolean[] late = {false, true};
+        for (int i = 0; i < subjects.length; i++) {
+            Map<String, Object> assignment = new HashMap<>();
+            assignment.put("subject", subjects[i]);
+            assignment.put("submitted", submitted[i]);
+            assignment.put("pending", pending[i]);
+            assignment.put("late", late[i]);
+            assignmentsList.add(assignment);
+        }
+        result.put("assignments", assignmentsList);
+        result.put("completionPercentage", 83);
+        return result;
+    }
+
+    // 5️⃣ Combined Graph Analytics API (Optional)
+    @Override
+    public Map<String, Object> getPerformanceDashboard(Long studentId) {
+        Map<String, Object> dashboard = new HashMap<>();
+        dashboard.put("academicGraph", getAcademicPerformanceGraph(studentId));
+        dashboard.put("attendanceGraph", getAttendancePerformanceGraph(studentId, null, null));
+        dashboard.put("assignmentCompletion", getAssignmentCompletionAnalysis(studentId));
+        return dashboard;
+    }
 
     private final TeacherRepository teacherRepository;
     private final UserRepository userRepository;

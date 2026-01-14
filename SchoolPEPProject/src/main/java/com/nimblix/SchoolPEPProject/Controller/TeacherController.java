@@ -24,6 +24,46 @@ public class TeacherController {
 
     private final TeacherService teacherService;
 
+        // 1️⃣ Get Student Performance Summary (Top Section)
+        @GetMapping("/students/{studentId}/performance/summary")
+        public ResponseEntity<Map<String, Object>> getStudentPerformanceSummary(
+                        @PathVariable Long studentId,
+                        @RequestParam Long schoolId,
+                        @RequestParam Long classId) {
+                Map<String, Object> summary = teacherService.getStudentPerformanceSummary(studentId, schoolId, classId);
+                return ResponseEntity.ok(summary);
+        }
+
+        // 2️⃣ Academic Performance – Subject-wise Graph
+        @GetMapping("/students/{studentId}/performance/academics")
+        public ResponseEntity<Map<String, Object>> getAcademicPerformanceGraph(@PathVariable Long studentId) {
+                Map<String, Object> graph = teacherService.getAcademicPerformanceGraph(studentId);
+                return ResponseEntity.ok(graph);
+        }
+
+        // 3️⃣ Attendance Performance – Weekly Graph
+        @GetMapping("/students/{studentId}/performance/attendance")
+        public ResponseEntity<Map<String, Object>> getAttendancePerformanceGraph(
+                        @PathVariable Long studentId,
+                        @RequestParam(required = false) String week,
+                        @RequestParam(required = false) String month) {
+                Map<String, Object> attendance = teacherService.getAttendancePerformanceGraph(studentId, week, month);
+                return ResponseEntity.ok(attendance);
+        }
+
+        // 4️⃣ Assignment Completion Analysis
+        @GetMapping("/students/{studentId}/performance/assignments")
+        public ResponseEntity<Map<String, Object>> getAssignmentCompletionAnalysis(@PathVariable Long studentId) {
+                Map<String, Object> analysis = teacherService.getAssignmentCompletionAnalysis(studentId);
+                return ResponseEntity.ok(analysis);
+        }
+
+        // 5️⃣ Combined Graph Analytics API (Optional)
+        @GetMapping("/students/{studentId}/performance/dashboard")
+        public ResponseEntity<Map<String, Object>> getPerformanceDashboard(@PathVariable Long studentId) {
+                Map<String, Object> dashboard = teacherService.getPerformanceDashboard(studentId);
+                return ResponseEntity.ok(dashboard);
+        }
     @PostMapping("/teacherRegister")
     public Map<String, String> registerTeacher(@RequestBody TeacherRegistrationRequest request) {
         return teacherService.registerTeacher(request);

@@ -34,4 +34,11 @@ public interface TeacherService {
 
     Map<String, String> deleteAssignment(Long assignmentId, Long subjectId);
 
+        // Performance APIs
+        Map<String, Object> getStudentPerformanceSummary(Long studentId, Long schoolId, Long classId);
+        Map<String, Object> getAcademicPerformanceGraph(Long studentId);
+        Map<String, Object> getAttendancePerformanceGraph(Long studentId, String week, String month);
+        Map<String, Object> getAssignmentCompletionAnalysis(Long studentId);
+        Map<String, Object> getPerformanceDashboard(Long studentId);
+
 }
