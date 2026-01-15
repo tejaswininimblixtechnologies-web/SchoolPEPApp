@@ -10,7 +10,12 @@ import lombok.Setter;
 
 
 @Entity
-@Table(name = "attendance_record")
+@Table(
+        name = "attendance_record",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"student_id", "attendance_date"})
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,13 +24,13 @@ public class Attendance {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "student_id")
-    private Long studentId;
+    @Column(name = "student_id", nullable = false)
+    private String studentId;
 
-    @Column(name = "attendance_date")
+    @Column(name = "attendance_date", nullable = false)
     private String attendanceDate;
 
-    @Column(name = "attendance_status")
+    @Column(name = "attendance_status", nullable = false)
     private String attendanceStatus;
 
     @Column(name = "created_time")
@@ -44,7 +49,7 @@ public class Attendance {
 
     @PreUpdate
     protected void onUpdate(){
-        this.updatedTime= SchoolUtil.changeCurrentTimeToLocalDateFromGmtToISTInString();
+        updatedTime= SchoolUtil.changeCurrentTimeToLocalDateFromGmtToISTInString();
 
 
     }

@@ -14,7 +14,7 @@ public interface SchoolService {
     List<SchoolListResponse> getAllSchools();
 
     void verifySchoolOtp(String email, String otp);
-    
+
     void validateSubscription(School school);
 
     School getLoggedInSchool();

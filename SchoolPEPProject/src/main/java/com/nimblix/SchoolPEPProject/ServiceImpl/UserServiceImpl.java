@@ -7,7 +7,9 @@ import com.nimblix.SchoolPEPProject.Repository.ParentRepository;
 import com.nimblix.SchoolPEPProject.Repository.StudentRepository;
 import com.nimblix.SchoolPEPProject.Request.UserRegistrationRequest;
 import com.nimblix.SchoolPEPProject.Service.UserService;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,14 @@ public class UserServiceImpl implements UserService {
     private final StudentRepository studentRepository;
     private final ParentRepository parentRepository;
     private final PasswordEncoder passwordEncoder;
+
+//    @PostConstruct
+//    public void generatePassword() {
+//        System.out.println(
+//                passwordEncoder.encode("password123")
+//        );
+//    }
+
 
     @Override
     public ResponseEntity<?> registerUser(UserRegistrationRequest request) {

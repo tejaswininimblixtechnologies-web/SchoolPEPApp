@@ -13,8 +13,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ParentServiceImpl implements ParentService {
 
-     private final ParentRepository parentRepository;
-     private final PasswordEncoder passwordEncoder;
+    private final ParentRepository parentRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public AuthParentResponse signUp(ParentRegisterRequest request) {

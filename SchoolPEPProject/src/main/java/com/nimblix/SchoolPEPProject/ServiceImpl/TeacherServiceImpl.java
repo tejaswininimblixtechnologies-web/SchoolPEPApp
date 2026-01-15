@@ -216,13 +216,13 @@ public class TeacherServiceImpl implements TeacherService {
         if (!schoolRepository.existsById(request.getSchoolId())) {
             throw new IllegalArgumentException("Invalid School ID");
         }
-      log.info("School Id is "+request.getSchoolId());
+        log.info("School Id is "+request.getSchoolId());
         if (!classroomRepository.existsByIdAndSchoolId(
                 request.getClassId(),
                 request.getSchoolId())) {
             throw new IllegalArgumentException("Invalid Class ID for given School");
         }
-      log.info("Classroom Id is "+request.getClassId());
+        log.info("Classroom Id is "+request.getClassId());
         if (!subjectRepository.existsByIdAndClassRoomId(
                 request.getSubjectId(),
                 request.getClassId())) {
@@ -247,7 +247,7 @@ public class TeacherServiceImpl implements TeacherService {
 
         Assignments savedAssignment =
                 assignmentsRepository.save(assignment);
-       log.info("Saved Assignment "+savedAssignment);
+        log.info("Saved Assignment "+savedAssignment);
         // 6️⃣ Handle Attachments
         if (files != null && files.length > 0) {
             for (MultipartFile file : files) {

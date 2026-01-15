@@ -86,7 +86,7 @@ public class SchoolServiceImpl implements SchoolService {
         emailOtp.setOtp(String.valueOf(otp));
         emailOtp.setVerified(Boolean.FALSE);
 
-       // Set expiry time as String in IST format
+        // Set expiry time as String in IST format
         emailOtp.setExpiryTime(SchoolUtil.getExpiryTimeInISTString(5));
 
 

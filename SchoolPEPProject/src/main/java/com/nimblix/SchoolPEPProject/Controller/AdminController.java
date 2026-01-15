@@ -16,10 +16,14 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/admin")
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 public class AdminController {
 
     private final AdminService adminService;
+
+    public AdminController(AdminService adminService){
+        this.adminService = adminService;
+    }
 
     @PostMapping("/adminlogin")
     public ResponseEntity<String> submitEmail(@RequestBody String email) {
@@ -88,7 +92,7 @@ public class AdminController {
         return adminService.getAdminProfile(adminId, schoolId);
     }
 
-    }
+}
 
 
 
