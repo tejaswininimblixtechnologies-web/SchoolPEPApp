@@ -52,8 +52,15 @@ public class AuthController {
                         .body(Map.of(SchoolConstants.MESSAGE, "User not found or inactive"));
             }
 
+            // 🔒 Role null safety check (VERY IMPORTANT)
+            if (user.getRole() == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of(SchoolConstants.MESSAGE, "User role not assigned"));
+            }
+
             String dbRole = user.getRole().getRoleName().toUpperCase();
             String requestRole = request.getRole().toUpperCase();
+
 
             // 4️⃣ Role validation
             if (!dbRole.equals(requestRole)) {
@@ -62,20 +69,19 @@ public class AuthController {
             }
 
             // 5️⃣ Password check ONLY for STUDENT
-            if (SchoolConstants.STUDENT.equals(dbRole)) {
-
-                if (request.getPassword() == null || request.getPassword().isBlank()) {
-                    return ResponseEntity.badRequest()
-                            .body(Map.of(SchoolConstants.MESSAGE, "Password is required for student login"));
-                }
-
-                authenticationManager.authenticate(
-                        new UsernamePasswordAuthenticationToken(
-                                request.getEmail(),
-                                request.getPassword()
-                        )
-                );
+            // Password check for ALL users
+            if (request.getPassword() == null || request.getPassword().isBlank()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of(SchoolConstants.MESSAGE, "Password is required"));
             }
+
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+
 
             // 6️⃣ Generate JWT
             UserDetails userDetails =
