@@ -19,7 +19,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AdminController {
 
-    private final AdminService adminService;
+    public final AdminService adminService;
 
     @PostMapping("/adminlogin")
     public ResponseEntity<String> submitEmail(@RequestBody String email) {
